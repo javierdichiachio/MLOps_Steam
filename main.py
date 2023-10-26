@@ -6,11 +6,14 @@ import numpy as np
 app = FastAPI()
 
 # Se cargan los datasets
-df_games = pd.read_parquet('steam_games.parquet')
-df_reviews = pd.read_parquet('user_reviews.parquet')
-df_items = pd.read_parquet('user_items.parquet')
-df_rev_games = pd.merge(df_reviews,df_games, on = "item_id", how="inner")
-df_items_games = pd.merge(df_items,df_games, on = "item_id", how="inner")
+#df_games = pd.read_parquet('steam_games.parquet')
+#df_reviews = pd.read_parquet('user_reviews.parquet')
+#df_items = pd.read_parquet('user_items.parquet')
+#df_rev_games = pd.merge(df_reviews,df_games, on = "item_id", how="inner")
+#df_items_games = pd.merge(df_items,df_games, on = "item_id", how="inner")
+
+df_rev_games = pd.read_parquet('reviews_and_games.parquet')
+df_items_games = pd.read_parquet('items_and_games.parquet')
 
 # Se convierte a string el año de posteo
 df_rev_games["posted_year"] = df_rev_games["posted_year"].astype(int)
@@ -45,14 +48,14 @@ def developer(desarrollador : str):
     '''
     
     # Si el desarrollador no se encuentra en los dataframes:
-    if desarrollador not in df_games['developer'].values:
+    if desarrollador not in df_items_games['developer'].values:
         
         return f"ERROR: El desarrollador {desarrollador} no existe en la base de datos."   # se imprime mensaje de error
     
     # Si el desarrollador se encuentra en la base de datos:
     else:
         # Se filtra la tabla de juegos en funcion a las columnas que vamos a utilizar
-        df = df_games[["item_id", "price","developer", "release_year"]]
+        df = df_items_games[["item_id", "price","developer", "release_year"]].drop_duplicates(subset = "item_id")
         
         # Se filtra en el df el desarrollador ingresado
         df_developer = df[df["developer"] == desarrollador]
@@ -149,7 +152,7 @@ def UserForGenre(genero : str):
 			     "Horas jugadas":[{Año: 2013, Horas: 203}, {Año: 2012, Horas: 100}, {Año: 2011, Horas: 23}]}
     '''
     # Si el genero no se encuentra en los dataframes:
-    if genero not in (df_games.columns):
+    if genero not in (df_items_games.columns):
         
         return f"ERROR: El género {genero} no existe en la base de datos."   # se imprime mensaje de error    
     
@@ -247,7 +250,7 @@ async def developer_reviews_analysis(desarrollador:str):
     '''
 
     # Si el desarrollador no se encuentra en los dataframes:
-    if desarrollador not in df_games['developer'].values:
+    if desarrollador not in df_rev_games['developer'].values:
         
         return f"ERROR: El desarrollador {desarrollador} no existe en la base de datos."   # se imprime mensaje de error
     
