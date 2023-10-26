@@ -6,17 +6,14 @@ import numpy as np
 app = FastAPI()
 
 # Se cargan los datasets
-#df_games = pd.read_parquet('steam_games.parquet')
-#df_reviews = pd.read_parquet('user_reviews.parquet')
-#df_items = pd.read_parquet('user_items.parquet')
+df_games = pd.read_parquet('steam_games.parquet')
+df_reviews = pd.read_parquet('user_reviews.parquet')
+df_items = pd.read_parquet('user_items.parquet')
 #df_rev_games = pd.merge(df_reviews,df_games, on = "item_id", how="inner")
 #df_items_games = pd.merge(df_items,df_games, on = "item_id", how="inner")
 
-df_rev_games = pd.read_parquet('reviews_and_games.parquet')
-df_items_games = pd.read_parquet('items_and_games.parquet')
-
 # Se convierte a string el año de posteo
-df_rev_games["posted_year"] = df_rev_games["posted_year"].astype(int)
+#df_rev_games["posted_year"] = df_rev_games["posted_year"].astype(int)
 
 
 #---------------------------------------------------------------------------------------------------------------#
@@ -48,14 +45,14 @@ def developer(desarrollador : str):
     '''
     
     # Si el desarrollador no se encuentra en los dataframes:
-    if desarrollador not in df_items_games['developer'].values:
+    if desarrollador not in df_games['developer'].values:
         
         return f"ERROR: El desarrollador {desarrollador} no existe en la base de datos."   # se imprime mensaje de error
     
     # Si el desarrollador se encuentra en la base de datos:
     else:
         # Se filtra la tabla de juegos en funcion a las columnas que vamos a utilizar
-        df = df_items_games[["item_id", "price","developer", "release_year"]].drop_duplicates(subset = "item_id")
+        df = df_games[["item_id", "price","developer", "release_year"]]
         
         # Se filtra en el df el desarrollador ingresado
         df_developer = df[df["developer"] == desarrollador]
@@ -102,44 +99,37 @@ def userdata(user_id : str):
     
     Ejemplo de retorno: {"Usuario X" : us213ndjss09sdf, "Dinero gastado": 200 USD, "% de recomendación": 20%, 
     "cantidad de items": 5}
-    '''
-    # Si el user_id no se encuentra en los dataframes:
-    if user_id not in df_rev_games['user_id'].values:
-        
-        return f"ERROR: El user_id {user_id} no existe en la base de datos."   # se imprime mensaje de error
+    '''    
+    # Se filtran los datos en funcion al usuario especificado
+    df_filtrado = df_reviews[df_reviews['user_id'] == user_id]
     
-    # Si el user_id no se encuentra en los dataframes:
-    else:
-        # Se filtran las columnas del dataset a utilizar
-        df_merged = df_rev_games[['user_id','item_id','price', 'recommend']]
+    # Se unen las columnas necesarias de los dataframes:
+    df_merged = pd.merge(df_filtrado[['user_id','item_id','recommend']], df_games[['item_id', 'price']], on = "item_id", how = "inner")
+    
+    # Se calcula la cantidad de dinero gastado por el usuario
+    dinero_gastado = round(df_merged['price'].sum(), 2)
 
-        # Se filtran los datos en funcion al usuario especificado
-        df_merged = df_merged[df_rev_games['user_id'] == user_id]
+    # Se calcula la cantidad de recomendaciones del usuario
+    recomendaciones = df_merged['recommend'].sum()
 
-        # Se calcula la cantidad de dinero gastado por el usuario
-        dinero_gastado = round(df_merged['price'].sum(), 2)
+    # Se calcula el total de reviews del usuario
+    total_reviews = df_merged.shape[0]
 
-        # Se calcula la cantidad de recomendaciones del usuario
-        recomendaciones = df_merged['recommend'].sum()
+    # Se calcula el porcentaje de recomendaciones sobre el total de reviews   
+    porcentaje_recomendacion = round(recomendaciones / total_reviews * 100, 0)
 
-        # Se calcula el total de reviews del usuario
-        total_reviews = df_merged.shape[0]
+    # Se calcula la cantidad de items por usuario
+    cantidad_de_items = df_merged['item_id'].nunique()
 
-        # Se calcula el porcentaje de recomendaciones sobre el total de reviews   
-        porcentaje_recomendacion = round(recomendaciones / total_reviews * 100, 0)
+    # Crear un diccionario con los resultados
+    dicc_rdos = {
+    "Usuario": user_id,
+    "Dinero gastado": f'{dinero_gastado} USD',
+    "% de recomendación": f'{porcentaje_recomendacion}%',
+    'Cantidad de items': cantidad_de_items
+    }
 
-        # Se calcula la cantidad de items por usuario
-        cantidad_de_items = df_merged['item_id'].nunique()
-
-        # Crear un diccionario con los resultados
-        dicc_rdos = {
-        "Usuario": user_id,
-        "Dinero gastado": f'{dinero_gastado} USD',
-        "% de recomendación": f'{porcentaje_recomendacion}%',
-        'Cantidad de items': cantidad_de_items
-        }
-
-        return dicc_rdos
+    return dicc_rdos
 
 #---------------------------------------------------------------------------------------------------------------#
 
@@ -152,7 +142,7 @@ def UserForGenre(genero : str):
 			     "Horas jugadas":[{Año: 2013, Horas: 203}, {Año: 2012, Horas: 100}, {Año: 2011, Horas: 23}]}
     '''
     # Si el genero no se encuentra en los dataframes:
-    if genero not in (df_items_games.columns):
+    if genero not in (df_games.columns):
         
         return f"ERROR: El género {genero} no existe en la base de datos."   # se imprime mensaje de error    
     
@@ -160,10 +150,10 @@ def UserForGenre(genero : str):
     else:
     # Si el genero se encuentra en los dataframes:
         # See filtra el dataframe por todos aquellos juegos catalogados dentro del género seleccionado
-        df_genre = df_items_games[df_items_games[genero] == 1]
-
-        # Se seleccionan las columnas que se van a mantener
-        df_genre = df_genre[["user_id", "playtime_forever", "release_year"]]
+        df_filter = df_games[df_games[genero] == 1]
+        
+        # Se seleccionan las columnas necesarias de los dataframes:
+        df_genre = pd.merge(df_filter['release_year'], df_items[["user_id", "playtime_forever"]], on="item_id", how = 'inner')
 
         # Se agrupa el df por user_id sumando la cantidad de horas jugadas y buscando el usuario con el valor máximo
         user_max = df_genre.groupby("user_id")["playtime_forever"].sum().idxmax() 
@@ -200,12 +190,15 @@ def top_developer_year(year):
   
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
     '''
+    #Convertimos a entero
+    año = int(año)
+    
     # Se filtran los datos por el año ingresado:
-    df_year = df_year[df_year['posted_year'] == year]
+    df_filter = df_reviews[df_reviews['posted_year'] == year]
 
-    # Se seleccionan las columnas a utilizar
-    df_year = df_rev_games[['posted_year','app_name','recommend', 'sentiment_analysis', 'developer']]
-
+    # Se seleccionan las columnas a utilizar en el DataFrame
+    df_year = pd.merge(df_filter[['posted_year','recommend', 'sentiment_analysis']], df_games[['app_name','developer']], on = "id_item", how = 'inner')
+    
     # Se filtran las recomendaciones de usuarios:
     df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)]
 
@@ -227,7 +220,13 @@ def best_developer_year1(año : str):
   
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
     '''
-    return None
+    try:
+        año_int = int(año)
+        return top_developer_year(año_int)
+    
+    except Exception as e:
+        
+       return {"error": str(e)}
 
 
 @app.get('/best_developer_year2/{año}')
@@ -238,7 +237,26 @@ def best_developer_year2(año : str):
   
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
     '''    
-    return None
+    #Convertimos a entero
+    año = int(año)
+
+    # Se filtran los datos por el año ingresado:
+    df_filter = df_reviews[df_reviews['posted_year'] == año]
+
+    # Se seleccionan las columnas a utilizar en el DataFrame
+    df_year = pd.merge(df_filter[['posted_year','recommend', 'sentiment_analysis']], df_games[['app_name','developer']], on = "id_item", how = 'inner')
+
+    # Se filtran las recomendaciones de usuarios:
+    df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)]
+
+    # Se cuentan las recomendaciones para cada desarrollador
+    recomendaciones_developer = df_year.groupby('developer')["app_name"].count()
+
+    # Se ordenan las recomendaciones por orden descendente, se seleccionan las primeras 3 y se convierten a lista:
+    best_developers = recomendaciones_developer.sort_values(ascending=False).head(3).index.to_list()
+
+    # Se devuelven los resultados en una lista
+    return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]}
 #---------------------------------------------------------------------------------------------------------------#
 
 @app.get('/developer_reviews/{desarrollador}')
@@ -250,18 +268,18 @@ async def developer_reviews_analysis(desarrollador:str):
     '''
 
     # Si el desarrollador no se encuentra en los dataframes:
-    if desarrollador not in df_rev_games['developer'].values:
+    if desarrollador not in df_games['developer'].values:
         
         return f"ERROR: El desarrollador {desarrollador} no existe en la base de datos."   # se imprime mensaje de error
     
     # Si el desarrollador se encuentra en la base de datos:
     else:
-        # Se filtran las columnas a utilizar y se eliminan duplicados
-        df_merged = df_rev_games[['developer','sentiment_analysis']]
-        
         # Se filtran los datos por el developer ingresado
-        df_merged = df_merged[df_merged["developer"] == desarrollador]
-
+        df_filter = df_games[df_games["developer"] == desarrollador]
+        
+        # Se seleccionan las columnas a utilizar
+        df_merged = pd.merge(df_filter['developer'], df_reviews['sentiment_analysis'], on = 'item_id', how = 'inner')
+        
         # Se obtienen la cantidad de reviews positivas y negativas
         positive_reviews = df_merged[df_merged["sentiment_analysis"] == 2].shape[0]
         negative_reviews = df_merged[df_merged["sentiment_analysis"] == 0].shape[0]
