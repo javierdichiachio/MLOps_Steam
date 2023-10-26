@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import pandas as pd
 import numpy as np
+import gc
 
 # Se instancia la app
 app = FastAPI()
@@ -52,10 +53,11 @@ def developer(desarrollador : str):
     # Si el desarrollador se encuentra en la base de datos:
     else:
         # Se filtra la tabla de juegos en funcion a las columnas que vamos a utilizar
+        #df_games = pd.read_parquet('steam_games.parquet', columns=[["item_id", "price","developer", "release_year"]])
         df = df_games[["item_id", "price","developer", "release_year"]]
         
         # Se filtra en el df el desarrollador ingresado
-        df_developer = df[df["developer"] == desarrollador]
+        df_developer = df[df_games["developer"] == desarrollador]
         
         # Se obtienen la cantidad de items totales por año:
         items_year = df_developer.groupby("release_year")["item_id"].count()  
@@ -90,6 +92,7 @@ def developer(desarrollador : str):
 
         return diccionario
 
+gc.collect()
 #---------------------------------------------------------------------------------------------------------------#
 
 @app.get('/userdata/{user_id}')
@@ -100,6 +103,9 @@ def userdata(user_id : str):
     Ejemplo de retorno: {"Usuario X" : us213ndjss09sdf, "Dinero gastado": 200 USD, "% de recomendación": 20%, 
     "cantidad de items": 5}
     '''    
+    #df_reviews = pd.read_parquet('user_reviews.parquet', columns=[['item_id','user_id','item_id','recommend']])
+    #df_games = pd.read_parquet('steam_games.parquet',columns=[['item_id', 'price']])
+
     # Se filtran los datos en funcion al usuario especificado
     df_filtrado = df_reviews[df_reviews['user_id'] == user_id]
     
@@ -130,7 +136,7 @@ def userdata(user_id : str):
     }
 
     return dicc_rdos
-
+gc.collect()
 #---------------------------------------------------------------------------------------------------------------#
 
 @app.get('/UserForGenre/{user_id}')
@@ -141,47 +147,40 @@ def UserForGenre(genero : str):
     Ejemplo de retorno: {"Usuario con más horas jugadas para Género X" : us213ndjss09sdf,
 			     "Horas jugadas":[{Año: 2013, Horas: 203}, {Año: 2012, Horas: 100}, {Año: 2011, Horas: 23}]}
     '''
-    # Si el genero no se encuentra en los dataframes:
-    if genero not in (df_games.columns):
-        
-        return f"ERROR: El género {genero} no existe en la base de datos."   # se imprime mensaje de error    
+    # See filtra el dataframe por todos aquellos juegos catalogados dentro del género seleccionado
+    df_filter = df_games[df_games[genero] == 1]
     
-    # Si el genero se encuentra en los dataframes:
-    else:
-    # Si el genero se encuentra en los dataframes:
-        # See filtra el dataframe por todos aquellos juegos catalogados dentro del género seleccionado
-        df_filter = df_games[df_games[genero] == 1]
-        
-        # Se seleccionan las columnas necesarias de los dataframes:
-        df_genre = pd.merge(df_filter['release_year'], df_items[["user_id", "playtime_forever"]], on="item_id", how = 'inner')
+    # Se seleccionan las columnas necesarias de los dataframes:
+    df_genre = pd.merge(df_filter[['item_id','release_year']], df_items[['item_id',"user_id", "playtime_forever"]], on="item_id", how = 'inner')
 
-        # Se agrupa el df por user_id sumando la cantidad de horas jugadas y buscando el usuario con el valor máximo
-        user_max = df_genre.groupby("user_id")["playtime_forever"].sum().idxmax() 
-        
-        # Se filtra la información del usuario con más horas jugadas
-        df_genre = df_genre[df_genre["user_id"] == user_max] 
+    # Se agrupa el df por user_id sumando la cantidad de horas jugadas y buscando el usuario con el valor máximo
+    user_max = df_genre.groupby("user_id")["playtime_forever"].sum().idxmax() 
+    
+    # Se filtra la información del usuario con más horas jugadas
+    df_genre = df_genre[df_genre["user_id"] == user_max] 
 
-        # Se agrupa la cantidad de horas jugadas por año por el usuario
-        hours_year = df_genre.groupby("release_year")["playtime_forever"].sum()
+    # Se agrupa la cantidad de horas jugadas por año por el usuario
+    hours_year = df_genre.groupby("release_year")["playtime_forever"].sum()
 
-        # Se agrupan las horas en un diccionario de valores
-        hours_dicc = hours_year.to_dict() 
+    # Se agrupan las horas en un diccionario de valores
+    hours_dicc = hours_year.to_dict() 
 
-        # Se crea un diccionario vacío que almacenará los valores formateados
-        hours_dicc1 = {}
-                
-        # Se itera sobra cada uno de los pares clave-valor del diccionario original
-        for clave, valor in hours_dicc.items(): 
-            key_format = f'Año: {int(clave)}'           # se da formato al año
-            value_format = f'Horas: {int(valor)}'       # se da formato a la cantidad de horas jugadas
-            hours_dicc1[key_format] = value_format      # se asignan los valores al diccionario creado anteriormente
+    # Se crea un diccionario vacío que almacenará los valores formateados
+    hours_dicc1 = {}
+            
+    # Se itera sobra cada uno de los pares clave-valor del diccionario original
+    for clave, valor in hours_dicc.items(): 
+        key_format = f'Año: {int(clave)}'           # se da formato al año
+        value_format = f'Horas: {int(valor)}'       # se da formato a la cantidad de horas jugadas
+        hours_dicc1[key_format] = value_format      # se asignan los valores al diccionario creado anteriormente
 
-        # Se crea la clave a utilizar en el diccionario de retorno
-        clave_dicc = f'Usuario con más horas jugadas para Género {genero}'
-        
-        # Se retornan los valores en un diccionario: 
-        return {clave_dicc : user_max, "Horas jugadas": hours_dicc1}
+    # Se crea la clave a utilizar en el diccionario de retorno
+    clave_dicc = f'Usuario con más horas jugadas para Género {genero}'
+    
+    # Se retornan los valores en un diccionario: 
+    return {clave_dicc : user_max, "Horas jugadas": hours_dicc1}
 
+gc.collect()
 #---------------------------------------------------------------------------------------------------------------#
 def top_developer_year(year):
     '''
@@ -195,7 +194,8 @@ def top_developer_year(year):
     
     # Se filtran los datos por el año ingresado:
     df_filter = df_reviews[df_reviews['posted_year'] == year]
-
+    #df_games = pd.read_parquet('steam_games.parquet',columns=[['item_id', 'app_name','developer']])
+    
     # Se seleccionan las columnas a utilizar en el DataFrame
     df_year = pd.merge(df_filter[['posted_year','recommend', 'sentiment_analysis']], df_games[['app_name','developer']], on = "id_item", how = 'inner')
     
@@ -242,7 +242,7 @@ def best_developer_year2(año : str):
 
     # Se filtran los datos por el año ingresado:
     df_filter = df_reviews[df_reviews['posted_year'] == año]
-
+    
     # Se seleccionan las columnas a utilizar en el DataFrame
     df_year = pd.merge(df_filter[['posted_year','recommend', 'sentiment_analysis']], df_games[['app_name','developer']], on = "id_item", how = 'inner')
 
@@ -257,6 +257,8 @@ def best_developer_year2(año : str):
 
     # Se devuelven los resultados en una lista
     return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]}
+
+gc.collect()
 #---------------------------------------------------------------------------------------------------------------#
 
 @app.get('/developer_reviews/{desarrollador}')
@@ -266,7 +268,7 @@ async def developer_reviews_analysis(desarrollador:str):
     
     Ejemplo de retorno: {'Valve' : [Negative = 182, Positive = 278]}
     '''
-
+    
     # Si el desarrollador no se encuentra en los dataframes:
     if desarrollador not in df_games['developer'].values:
         
@@ -278,7 +280,7 @@ async def developer_reviews_analysis(desarrollador:str):
         df_filter = df_games[df_games["developer"] == desarrollador]
         
         # Se seleccionan las columnas a utilizar
-        df_merged = pd.merge(df_filter['developer'], df_reviews['sentiment_analysis'], on = 'item_id', how = 'inner')
+        df_merged = pd.merge(df_filter[['item_id','developer']], df_reviews[['item_id','sentiment_analysis']], on = 'item_id', how = 'inner')
         
         # Se obtienen la cantidad de reviews positivas y negativas
         positive_reviews = df_merged[df_merged["sentiment_analysis"] == 2].shape[0]
@@ -292,4 +294,6 @@ async def developer_reviews_analysis(desarrollador:str):
 
         # Se devuelve un diccionario con los resultados obtenidos
         return dicc 
+    
+gc.collect()
 #---------------------------------------------------------------------------------------------------------------#
