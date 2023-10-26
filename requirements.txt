@@ -1,9 +1,8 @@
-fastapi==0.104.0
-idna==3.4
-numpy==1.26.1
-pandas==2.1.1
-pyarrow==13.0.0
-pydantic==2.4.2
-pydantic_core==2.10.1
-python-dateutil==2.8.2
-uvicorn==0.23.2
+fastapi
+numpy
+pandas
+pyarrow
+pydantic
+pydantic_core
+python-dateutil
+uvicorn
