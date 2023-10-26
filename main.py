@@ -6,9 +6,9 @@ import numpy as np
 app = FastAPI()
 
 # Se cargan los datasets
-df_games = pd.read_parquet(r'Datasets\steam_games.parquet')
-df_reviews = pd.read_parquet(r'Datasets\user_reviews.parquet')
-df_items = pd.read_parquet(r'Datasets\user_items.parquet')
+df_games = pd.read_parquet('steam_games.parquet')
+df_reviews = pd.read_parquet('user_reviews.parquet')
+df_items = pd.read_parquet('user_items.parquet')
 df_rev_games = pd.merge(df_reviews,df_games, on = "item_id", how="inner")
 df_items_games = pd.merge(df_items,df_games, on = "item_id", how="inner")
 
