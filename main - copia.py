@@ -224,7 +224,13 @@ def best_developer_year1(año : str):
   
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
     '''
-    return None
+    try:
+        año_int = int(año)
+        return top_developer_year(año_int)
+    
+    except Exception as e:
+        
+       return {"error": str(e)}
 
 
 @app.get('/best_developer_year2/{año}')
@@ -235,7 +241,26 @@ def best_developer_year2(año : str):
   
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
     '''    
-    return None
+    #Convertimos a entero
+    año = int(año)
+
+    # Se seleccionan las columnas a utilizar
+    df_year = df_rev_games[['posted_year','app_name','recommend', 'sentiment_analysis', 'developer']]
+
+    # Se filtran los datos por el año ingresado:
+    df_year = df_year[df_year['posted_year'] == año]
+
+    # Se filtran las recomendaciones de usuarios:
+    df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)]
+
+    # Se cuentan las recomendaciones para cada desarrollador
+    recomendaciones_developer = df_year.groupby('developer')["app_name"].count()
+
+    # Se ordenan las recomendaciones por orden descendente, se seleccionan las primeras 3 y se convierten a lista:
+    best_developers = recomendaciones_developer.sort_values(ascending=False).head(3).index.to_list()
+
+    # Se devuelven los resultados en una lista
+    return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]}
 #---------------------------------------------------------------------------------------------------------------#
 
 @app.get('/developer_reviews/{desarrollador}')
