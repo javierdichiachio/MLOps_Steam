@@ -240,18 +240,10 @@ def best_developer_year2(año : str):
     (reviews.recommend = True y comentarios positivos)
   
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
-    '''
-    # Validamos que sea entero
-    if not validar_entero(año):
-        return {"error" : f"{año} no es un número entero válido"}
-    
+    '''    
     #Convertimos a entero
     año = int(año)
 
-    # Validamos el año esté dentro del rango
-    if result := validar_anio(año):
-        return {"error" : f"El año de lanzamiento no forma parte del dataset. Por favor pruebe valores entre {result[0]} y {result[1]}"}
-    
     # Se seleccionan las columnas a utilizar
     df_year = df_rev_games[['posted_year','app_name','recommend', 'sentiment_analysis', 'developer']]
 
