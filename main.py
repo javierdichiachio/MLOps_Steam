@@ -217,7 +217,7 @@ def top_developer_year(year):
     
 
 @app.get('/best_developer_year/{año}')
-async def best_developer_year1(año : str):
+def best_developer_year1(año : str):
     '''
     Devuelve el top 3 de desarrolladores con juegos más recomendados por usuarios para el año dado.
     (reviews.recommend = True y comentarios positivos)
