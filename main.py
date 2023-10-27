@@ -9,7 +9,8 @@ app = FastAPI()
 # Se cargan los datasets
 df_games = pd.read_parquet('steam_games.parquet')
 df_reviews = pd.read_parquet('user_reviews.parquet')
-df_items = pd.read_parquet('user_items.parquet')
+#df_items = pd.read_parquet('user_items.parquet')
+#df_items = pd.read_parquet('user_items_extended.parquet')
 #df_rev_games = pd.merge(df_reviews,df_games, on = "item_id", how="inner")
 #df_items_games = pd.merge(df_items,df_games, on = "item_id", how="inner")
 
@@ -66,8 +67,8 @@ def developer(desarrollador : str):
         df_dev_free = df_developer[df_developer["price"] == 0] 
 
         # Se obtiene la cantidad de items gratuitos por años
-        free_items = df_dev_free.groupby("release_year")["price"].count() #cantidad de gratis por año 
-
+        free_items = df_dev_free.groupby("release_year")["price"].count() 
+        
         # Se calcula el porcentaje de contenido gratuito por año
         free_proportion = round((free_items / items_year) * 100, 2)  
 
@@ -136,17 +137,17 @@ def userdata(user_id : str):
     }
 
     return dicc_rdos
-gc.collect()
-#---------------------------------------------------------------------------------------------------------------#
 
+#---------------------------------------------------------------------------------------------------------------#
+'''
 @app.get('/UserForGenre/{user_id}')
 def UserForGenre(genero : str):
-    '''Devuelve el usuario que acumula más horas jugadas para el género dado y una lista de acumulación de horas
+    Devuelve el usuario que acumula más horas jugadas para el género dado y una lista de acumulación de horas
     por año
     
     Ejemplo de retorno: {"Usuario con más horas jugadas para Género X" : us213ndjss09sdf,
 			     "Horas jugadas":[{Año: 2013, Horas: 203}, {Año: 2012, Horas: 100}, {Año: 2011, Horas: 23}]}
-    '''
+    
     # See filtra el dataframe por todos aquellos juegos catalogados dentro del género seleccionado
     df_filter = df_games[df_games[genero] == 1]
     
@@ -180,9 +181,10 @@ def UserForGenre(genero : str):
     # Se retornan los valores en un diccionario: 
     return {clave_dicc : user_max, "Horas jugadas": hours_dicc1}
 
-gc.collect()
+'''
 #---------------------------------------------------------------------------------------------------------------#
-def top_developer_year(year):
+@app.get('/best_developer_year/{año}')
+def best_developer_year(año):
     '''
     Devuelve el top 3 de desarrolladores con juegos más recomendados por usuarios para el año dado.
     (reviews.recommend = True y comentarios positivos)
@@ -193,72 +195,21 @@ def top_developer_year(year):
     año = int(año)
     
     # Se filtran los datos por el año ingresado:
-    df_filter = df_reviews[df_reviews['posted_year'] == year]
+    df_filter = df_reviews[df_reviews['posted_year'] == año]
     #df_games = pd.read_parquet('steam_games.parquet',columns=[['item_id', 'app_name','developer']])
     
     # Se seleccionan las columnas a utilizar en el DataFrame
-    df_year = pd.merge(df_filter[['posted_year','recommend', 'sentiment_analysis']], df_games[['app_name','developer']], on = "id_item", how = 'inner')
+    df_year = pd.merge(df_filter[['item_id','posted_year','recommend', 'sentiment_analysis']], df_games[['item_id','app_name','developer']], on = "item_id", how = 'inner')
     
-    # Se filtran las recomendaciones de usuarios:
-    df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)]
-
-    # Se cuentan las recomendaciones para cada desarrollador
-    recomendaciones_developer = df_year.groupby('developer')["app_name"].count()
+    # Se filtran las recomendaciones de usuarios y se agrupan por desarrollador:
+    df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)].groupby('developer')["app_name"].count().reset_index()
 
     # Se ordenan las recomendaciones por orden descendente, se seleccionan las primeras 3 y se convierten a lista:
-    best_developers = recomendaciones_developer.sort_values(ascending=False).head(3).index.to_list()
+    best_developers = df_year.sort_values("app_name", ascending=False).head(3)["developer"].to_list()
 
     # Se devuelven los resultados en una lista
-    return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]}
-    
+    return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]} 
 
-@app.get('/best_developer_year/{año}')
-def best_developer_year1(año : str):
-    '''
-    Devuelve el top 3 de desarrolladores con juegos más recomendados por usuarios para el año dado.
-    (reviews.recommend = True y comentarios positivos)
-  
-    Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
-    '''
-    try:
-        año_int = int(año)
-        return top_developer_year(año_int)
-    
-    except Exception as e:
-        
-       return {"error": str(e)}
-
-
-@app.get('/best_developer_year2/{año}')
-def best_developer_year2(año : str):
-    '''
-    Devuelve el top 3 de desarrolladores con juegos más recomendados por usuarios para el año dado.
-    (reviews.recommend = True y comentarios positivos)
-  
-    Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
-    '''    
-    #Convertimos a entero
-    año = int(año)
-
-    # Se filtran los datos por el año ingresado:
-    df_filter = df_reviews[df_reviews['posted_year'] == año]
-    
-    # Se seleccionan las columnas a utilizar en el DataFrame
-    df_year = pd.merge(df_filter[['posted_year','recommend', 'sentiment_analysis']], df_games[['app_name','developer']], on = "id_item", how = 'inner')
-
-    # Se filtran las recomendaciones de usuarios:
-    df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)]
-
-    # Se cuentan las recomendaciones para cada desarrollador
-    recomendaciones_developer = df_year.groupby('developer')["app_name"].count()
-
-    # Se ordenan las recomendaciones por orden descendente, se seleccionan las primeras 3 y se convierten a lista:
-    best_developers = recomendaciones_developer.sort_values(ascending=False).head(3).index.to_list()
-
-    # Se devuelven los resultados en una lista
-    return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]}
-
-gc.collect()
 #---------------------------------------------------------------------------------------------------------------#
 
 @app.get('/developer_reviews/{desarrollador}')
@@ -295,5 +246,5 @@ async def developer_reviews_analysis(desarrollador:str):
         # Se devuelve un diccionario con los resultados obtenidos
         return dicc 
     
-gc.collect()
+#gc.collect()
 #---------------------------------------------------------------------------------------------------------------#
