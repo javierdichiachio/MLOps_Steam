@@ -184,7 +184,7 @@ def UserForGenre(genero : str):
 '''
 #---------------------------------------------------------------------------------------------------------------#
 @app.get('/best_developer_year/{año}')
-def best_developer_year(año):
+def best_developer_year(año : str):
     '''
     Devuelve el top 3 de desarrolladores con juegos más recomendados por usuarios para el año dado.
     (reviews.recommend = True y comentarios positivos)
