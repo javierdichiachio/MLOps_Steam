@@ -103,39 +103,43 @@ def userdata(user_id : str):
     Ejemplo de retorno: {"Usuario X" : us213ndjss09sdf, "Dinero gastado": 200 USD, "% de recomendación": 20%, 
     "cantidad de items": 5}
     '''    
-    #df_reviews = pd.read_parquet('user_reviews.parquet', columns=[['item_id','user_id','item_id','recommend']])
-    #df_games = pd.read_parquet('steam_games.parquet',columns=[['item_id', 'price']])
-
-    # Se filtran los datos en funcion al usuario especificado
-    df_filtrado = df_reviews[df_reviews['user_id'] == user_id]
     
-    # Se unen las columnas necesarias de los dataframes:
-    df_merged = pd.merge(df_filtrado[['user_id','item_id','recommend']], df_games[['item_id', 'price']], on = "item_id", how = "inner")
-    
-    # Se calcula la cantidad de dinero gastado por el usuario
-    dinero_gastado = round(df_merged['price'].sum(), 2)
+    # Si el user_id no se encuentra en los dataframes:
+    if user_id not in df_reviews['user_id'].values:
+        
+        return f"ERROR: El user_id {user_id} no existe en la base de datos."   # se imprime mensaje de error
+        
+    else:    
+        # Se filtran los datos en funcion al usuario especificado
+        df_filtrado = df_reviews[df_reviews['user_id'] == user_id]
+        
+        # Se unen las columnas necesarias de los dataframes:
+        df_merged = pd.merge(df_filtrado[['user_id','item_id','recommend']], df_games[['item_id', 'price']], on = "item_id", how = "inner")
+        
+        # Se calcula la cantidad de dinero gastado por el usuario
+        dinero_gastado = round(df_merged['price'].sum(), 2)
 
-    # Se calcula la cantidad de recomendaciones del usuario
-    recomendaciones = df_merged['recommend'].sum()
+        # Se calcula la cantidad de recomendaciones del usuario
+        recomendaciones = df_merged['recommend'].sum()
 
-    # Se calcula el total de reviews del usuario
-    total_reviews = df_merged.shape[0]
+        # Se calcula el total de reviews del usuario
+        total_reviews = df_merged.shape[0]
 
-    # Se calcula el porcentaje de recomendaciones sobre el total de reviews   
-    porcentaje_recomendacion = round(recomendaciones / total_reviews * 100, 0)
+        # Se calcula el porcentaje de recomendaciones sobre el total de reviews   
+        porcentaje_recomendacion = round(recomendaciones / total_reviews * 100, 0)
 
-    # Se calcula la cantidad de items por usuario
-    cantidad_de_items = df_merged['item_id'].nunique()
+        # Se calcula la cantidad de items por usuario
+        cantidad_de_items = df_merged['item_id'].nunique()
 
-    # Crear un diccionario con los resultados
-    dicc_rdos = {
-    "Usuario": user_id,
-    "Dinero gastado": f'{dinero_gastado} USD',
-    "% de recomendación": f'{porcentaje_recomendacion}%',
-    'Cantidad de items': cantidad_de_items
-    }
+        # Crear un diccionario con los resultados
+        dicc_rdos = {
+        "Usuario": user_id,
+        "Dinero gastado": f'{dinero_gastado} USD',
+        "% de recomendación": f'{porcentaje_recomendacion}%',
+        'Cantidad de items': cantidad_de_items
+        }
 
-    return dicc_rdos
+        return dicc_rdos
 
 #---------------------------------------------------------------------------------------------------------------#
 '''
@@ -147,66 +151,78 @@ def UserForGenre(genero : str):
     Ejemplo de retorno: {"Usuario con más horas jugadas para Género X" : us213ndjss09sdf,
 			     "Horas jugadas":[{Año: 2013, Horas: 203}, {Año: 2012, Horas: 100}, {Año: 2011, Horas: 23}]}
     
-    # See filtra el dataframe por todos aquellos juegos catalogados dentro del género seleccionado
-    df_filter = df_games[df_games[genero] == 1]
+    # Si el genero no se encuentra en los juegos:
+    if genero not in df_games.columns:
+        
+        return f"ERROR: El género {genero} no existe en la base de datos."   # se imprime mensaje de error    
     
-    # Se seleccionan las columnas necesarias de los dataframes:
-    df_genre = pd.merge(df_filter[['item_id','release_year']], df_items[['item_id',"user_id", "playtime_forever"]], on="item_id", how = 'inner')
+    else:
+        # See filtra el dataframe por todos aquellos juegos catalogados dentro del género seleccionado
+        df_filter = df_games[df_games[genero] == 1]
+        
+        # Se seleccionan las columnas necesarias de los dataframes:
+        df_genre = pd.merge(df_filter[['item_id','release_year']], df_items[['item_id',"user_id", "playtime_forever"]], on="item_id", how = 'inner')
 
-    # Se agrupa el df por user_id sumando la cantidad de horas jugadas y buscando el usuario con el valor máximo
-    user_max = df_genre.groupby("user_id")["playtime_forever"].sum().idxmax() 
-    
-    # Se filtra la información del usuario con más horas jugadas
-    df_genre = df_genre[df_genre["user_id"] == user_max] 
+        # Se agrupa el df por user_id sumando la cantidad de horas jugadas y buscando el usuario con el valor máximo
+        user_max = df_genre.groupby("user_id")["playtime_forever"].sum().idxmax() 
+        
+        # Se filtra la información del usuario con más horas jugadas
+        df_genre = df_genre[df_genre["user_id"] == user_max] 
 
-    # Se agrupa la cantidad de horas jugadas por año por el usuario
-    hours_year = df_genre.groupby("release_year")["playtime_forever"].sum()
+        # Se agrupa la cantidad de horas jugadas por año por el usuario
+        hours_year = df_genre.groupby("release_year")["playtime_forever"].sum()
 
-    # Se agrupan las horas en un diccionario de valores
-    hours_dicc = hours_year.to_dict() 
+        # Se agrupan las horas en un diccionario de valores
+        hours_dicc = hours_year.to_dict() 
 
-    # Se crea un diccionario vacío que almacenará los valores formateados
-    hours_dicc1 = {}
-            
-    # Se itera sobra cada uno de los pares clave-valor del diccionario original
-    for clave, valor in hours_dicc.items(): 
-        key_format = f'Año: {int(clave)}'           # se da formato al año
-        value_format = f'Horas: {int(valor)}'       # se da formato a la cantidad de horas jugadas
-        hours_dicc1[key_format] = value_format      # se asignan los valores al diccionario creado anteriormente
+        # Se crea un diccionario vacío que almacenará los valores formateados
+        hours_dicc1 = {}
+                
+        # Se itera sobra cada uno de los pares clave-valor del diccionario original
+        for clave, valor in hours_dicc.items(): 
+            key_format = f'Año: {int(clave)}'           # se da formato al año
+            value_format = f'Horas: {int(valor)}'       # se da formato a la cantidad de horas jugadas
+            hours_dicc1[key_format] = value_format      # se asignan los valores al diccionario creado anteriormente
 
-    # Se crea la clave a utilizar en el diccionario de retorno
-    clave_dicc = f'Usuario con más horas jugadas para Género {genero}'
-    
-    # Se retornan los valores en un diccionario: 
-    return {clave_dicc : user_max, "Horas jugadas": hours_dicc1}
+        # Se crea la clave a utilizar en el diccionario de retorno
+        clave_dicc = f'Usuario con más horas jugadas para Género {genero}'
+        
+        # Se retornan los valores en un diccionario: 
+        return {clave_dicc : user_max, "Horas jugadas": hours_dicc1}
 
-'''
+    '''
 #---------------------------------------------------------------------------------------------------------------#
 @app.get('/best_developer_year/{year}')
-async def best_developer_year(year : str):
+def best_developer_year(year : str):
     '''
     Devuelve el top 3 de desarrolladores con juegos más recomendados por usuarios para el año dado.
     (reviews.recommend = True y comentarios positivos)
   
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
     '''
-    #Convertimos a entero
-    year = int(year)
-    
-    # Se filtran los datos por el año ingresado:
-    df_filter = df_reviews[df_reviews['posted_year'] == year]
+    # Si el año no se encuentra en los dataframes:
+    if year not in df_reviews['posted_year'].values:
         
-    # Se seleccionan las columnas a utilizar en el DataFrame
-    df_year = pd.merge(df_filter[['item_id','posted_year','recommend', 'sentiment_analysis']], df_games[['item_id','app_name','developer']], on = "item_id", how = 'inner')
+        return f"ERROR: El año {year} no existe en la base de datos."   # se imprime mensaje de error    
     
-    # Se filtran las recomendaciones de usuarios y se agrupan por desarrollador:
-    df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)].groupby('developer')["app_name"].count().reset_index()
+    else:
+        #Convertimos a entero
+        year = int(year)
+        
+        # Se filtran los datos por el año ingresado:
+        df_filter = df_reviews[df_reviews['posted_year'] == year]
+            
+        # Se seleccionan las columnas a utilizar en el DataFrame
+        df_year = pd.merge(df_filter[['item_id','posted_year','recommend', 'sentiment_analysis']], df_games[['item_id','app_name','developer']], on = "item_id", how = 'inner')
+        
+        # Se filtran las recomendaciones de usuarios y se agrupan por desarrollador:
+        df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)].groupby('developer')["app_name"].count().reset_index()
 
-    # Se ordenan las recomendaciones por orden descendente, se seleccionan las primeras 3 y se convierten a lista:
-    best_developers = df_year.sort_values("app_name", ascending=False).head(3)["developer"].to_list()
+        # Se ordenan las recomendaciones por orden descendente, se seleccionan las primeras 3 y se convierten a lista:
+        best_developers = df_year.sort_values("app_name", ascending=False).head(3)["developer"].to_list()
 
-    # Se devuelven los resultados en una lista
-    return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]} 
+        # Se devuelven los resultados en una lista
+        return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]} 
 
 #---------------------------------------------------------------------------------------------------------------#
 
