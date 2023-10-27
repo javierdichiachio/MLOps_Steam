@@ -93,7 +93,6 @@ def developer(desarrollador : str):
 
         return diccionario
 
-gc.collect()
 #---------------------------------------------------------------------------------------------------------------#
 
 @app.get('/userdata/{user_id}')
@@ -183,8 +182,8 @@ def UserForGenre(genero : str):
 
 '''
 #---------------------------------------------------------------------------------------------------------------#
-@app.get('/best_developer_year/{año}')
-async def best_developer_year(año : str):
+@app.get('/best_developer_year/{year}')
+async def best_developer_year(year : str):
     '''
     Devuelve el top 3 de desarrolladores con juegos más recomendados por usuarios para el año dado.
     (reviews.recommend = True y comentarios positivos)
@@ -192,10 +191,10 @@ async def best_developer_year(año : str):
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
     '''
     #Convertimos a entero
-    año = int(año)
+    year = int(year)
     
     # Se filtran los datos por el año ingresado:
-    df_filter = df_reviews[df_reviews['posted_year'] == año]
+    df_filter = df_reviews[df_reviews['posted_year'] == year]
         
     # Se seleccionan las columnas a utilizar en el DataFrame
     df_year = pd.merge(df_filter[['item_id','posted_year','recommend', 'sentiment_analysis']], df_games[['item_id','app_name','developer']], on = "item_id", how = 'inner')
@@ -245,5 +244,4 @@ async def developer_reviews_analysis(desarrollador:str):
         # Se devuelve un diccionario con los resultados obtenidos
         return dicc 
     
-#gc.collect()
 #---------------------------------------------------------------------------------------------------------------#
