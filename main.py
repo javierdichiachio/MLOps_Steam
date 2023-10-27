@@ -54,7 +54,6 @@ def developer(desarrollador : str):
     # Si el desarrollador se encuentra en la base de datos:
     else:
         # Se filtra la tabla de juegos en funcion a las columnas que vamos a utilizar
-        #df_games = pd.read_parquet('steam_games.parquet', columns=[["item_id", "price","developer", "release_year"]])
         df = df_games[["item_id", "price","developer", "release_year"]]
         
         # Se filtra en el df el desarrollador ingresado
@@ -201,15 +200,16 @@ def best_developer_year(year : str):
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
     '''
     # Si el año no se encuentra en los dataframes:
+    
+    #Convertimos a entero
+    year = int(year)
+    
     if year not in df_reviews['posted_year'].values:
         
         return f"ERROR: El año {year} no existe en la base de datos."   # se imprime mensaje de error    
     
     else:
-        #Convertimos a entero
-        year = int(year)
-        
-        # Se filtran los datos por el año ingresado:
+       # Se filtran los datos por el año ingresado:
         df_filter = df_reviews[df_reviews['posted_year'] == year]
             
         # Se seleccionan las columnas a utilizar en el DataFrame
