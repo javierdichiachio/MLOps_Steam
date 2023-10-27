@@ -184,7 +184,7 @@ def UserForGenre(genero : str):
 '''
 #---------------------------------------------------------------------------------------------------------------#
 @app.get('/best_developer_year/{año}')
-def best_developer_year(año : str):
+async def best_developer_year(año : str):
     '''
     Devuelve el top 3 de desarrolladores con juegos más recomendados por usuarios para el año dado.
     (reviews.recommend = True y comentarios positivos)
@@ -196,8 +196,7 @@ def best_developer_year(año : str):
     
     # Se filtran los datos por el año ingresado:
     df_filter = df_reviews[df_reviews['posted_year'] == año]
-    #df_games = pd.read_parquet('steam_games.parquet',columns=[['item_id', 'app_name','developer']])
-    
+        
     # Se seleccionan las columnas a utilizar en el DataFrame
     df_year = pd.merge(df_filter[['item_id','posted_year','recommend', 'sentiment_analysis']], df_games[['item_id','app_name','developer']], on = "item_id", how = 'inner')
     
