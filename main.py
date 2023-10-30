@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import pandas as pd
 import numpy as np
+import pickle
 import gc
 
 # Se instancia la app
@@ -9,7 +10,7 @@ app = FastAPI()
 # Se cargan los datasets
 df_games = pd.read_parquet('steam_games.parquet')
 df_reviews = pd.read_parquet('user_reviews.parquet')
-#df_items = pd.read_parquet('user_items_extended.parquet')
+#df_items = pd.read_parquet('user_items_extended.parquet')          # archivo no soportado por Render
 
 
 #---------------------------------------------------------------------------------------------------------------#
@@ -19,7 +20,6 @@ df_reviews = pd.read_parquet('user_reviews.parquet')
 @app.get('/')
 def root():
     """ Mensaje de bienvenida """
-    
     return {"message" : "Bienvenidos!"}
 
 #---------------------------------------------------------------------------------------------------------------#
@@ -152,7 +152,8 @@ def UserForGenre(genero : str):
     else:
         # See filtra el dataframe por todos aquellos juegos catalogados dentro del género seleccionado
         df_filter = df_games[df_games[genero] == 1]
-        
+        df_items = pd.read_parquet('user_items_extended.parquet')
+
         # Se seleccionan las columnas necesarias de los dataframes:
         df_genre = pd.merge(df_filter[['item_id','release_year']], df_items[['item_id',"user_id", "playtime_forever"]], on="item_id", how = 'inner')
 
@@ -180,6 +181,9 @@ def UserForGenre(genero : str):
         # Se crea la clave a utilizar en el diccionario de retorno
         clave_dicc = f'Usuario con más horas jugadas para Género {genero}'
         
+        # Se elimina la basura:
+        gc.collect()
+
         # Se retornan los valores en un diccionario: 
         return {clave_dicc : user_max, "Horas jugadas": hours_dicc1}
 
@@ -193,15 +197,16 @@ def best_developer_year(year : str):
   
     Ejemplo de retorno: [{"Puesto 1" : X}, {"Puesto 2" : Y},{"Puesto 3" : Z}]
     '''
-    # Si el año no se encuentra en los dataframes:
-    
+
     #Convertimos a entero
     year = int(year)
-    
+
+    # Si el año no se encuentra en los dataframes:    
     if year not in df_reviews['posted_year'].values:
         
         return f"ERROR: El año {year} no existe en la base de datos."   # se imprime mensaje de error    
     
+    # Si el año se encuentra en los dataframes
     else:
        # Se filtran los datos por el año ingresado:
         df_filter = df_reviews[df_reviews['posted_year'] == year]
@@ -213,7 +218,7 @@ def best_developer_year(year : str):
         df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)].groupby('developer')["app_name"].count()
 
         # Se ordenan las recomendaciones por orden descendente, se seleccionan las primeras 3 y se convierten a lista:
-        best_developers = df_year.sort_values("app_name", ascending=False).head(3).index.to_list()
+        best_developers = df_year.sort_values(ascending=False).head(3).index.to_list()
 
         # Se devuelven los resultados en un diccionario
         return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]} 
@@ -260,21 +265,35 @@ def user_recommendations(user_id:str):
   
     Ejemplo de retorno: 
     '''
+    # Se asigna el id ingresado a la variable user
     user = user_id
+
     # En primer lugar, sacamos los juegos que el usuario ya ha jugado:
+    # df_items = pd.read_parquet('user_items_extended.parquet')                         # archivo no soportado por Render
+    # df_items_games = pd.merge(df_items,df_games, on = "item_id", how="inner")
+    df_rev_games = pd.merge(df_reviews,df_games, on = "item_id", how="inner")
     games_played = df_rev_games[df_rev_games['user_id'] == user]
 
     # Se eliminan del df de juegos los jugados por el usuario
     df_user = df_games[["item_id", "app_name"]].drop(games_played.item_id, errors='ignore')
 
+    # Cargamos el modelo de Sistema de Recomendación entrenado:
+    with open('RS_model.pkl', 'rb') as file:
+        RS_model = pickle.load(file)
+
     # Realizamos las predicciones y las agregamos en una nueva columna:
-    df_user['estimate_Score'] = df_user['item_id'].apply(lambda x: model.predict(user, x).est)
+    df_user['estimate_Score'] = df_user['item_id'].apply(lambda x: RS_model.predict(user, x).est)
 
     # Ordenamos el df de manera descendente en funcion al score y seleccionamos los 5 principales:
     recommendations = df_user.sort_values('estimate_Score', ascending=False)["app_name"].head(5).to_list()
 
     # Se crea la llave del diccionario de retorno
     llave_dic = f'Recomendaciones para el usuario {user}'
+
+    # Se da formato al top 5 de recomendaciones:
+    recomm_output = [f'1. {recommendations[0]}', f'2. {recommendations[1]}', f'3. {recommendations[2]}', f'4. {recommendations[3]}',f'5. {recommendations[4]}']
     
     # Se devuelven los resultados en un diccionario
-    return {llave_dic : recommendations}
+    return {llave_dic : recomm_output}
+
+#---------------------------------------------------------------------------------------------------------------#

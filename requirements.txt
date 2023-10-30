@@ -1,8 +1,10 @@
 fastapi
+fastparquet
 numpy
 pandas
 pyarrow
 pydantic
 pydantic_core
 python-dateutil
+scikit-surprise
 uvicorn
