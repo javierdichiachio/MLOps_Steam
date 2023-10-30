@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 import pandas as pd
 import numpy as np
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 
 # Se instancia la app
 app = FastAPI()

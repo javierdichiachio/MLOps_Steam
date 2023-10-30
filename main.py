@@ -9,13 +9,7 @@ app = FastAPI()
 # Se cargan los datasets
 df_games = pd.read_parquet('steam_games.parquet')
 df_reviews = pd.read_parquet('user_reviews.parquet')
-#df_items = pd.read_parquet('user_items.parquet')
 #df_items = pd.read_parquet('user_items_extended.parquet')
-#df_rev_games = pd.merge(df_reviews,df_games, on = "item_id", how="inner")
-#df_items_games = pd.merge(df_items,df_games, on = "item_id", how="inner")
-
-# Se convierte a string el año de posteo
-#df_rev_games["posted_year"] = df_rev_games["posted_year"].astype(int)
 
 
 #---------------------------------------------------------------------------------------------------------------#
@@ -216,18 +210,18 @@ def best_developer_year(year : str):
         df_year = pd.merge(df_filter[['item_id','posted_year','recommend', 'sentiment_analysis']], df_games[['item_id','app_name','developer']], on = "item_id", how = 'inner')
         
         # Se filtran las recomendaciones de usuarios y se agrupan por desarrollador:
-        df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)].groupby('developer')["app_name"].count().reset_index()
+        df_year = df_year[(df_year['recommend'] == 1) & (df_year['sentiment_analysis'] == 2)].groupby('developer')["app_name"].count()
 
         # Se ordenan las recomendaciones por orden descendente, se seleccionan las primeras 3 y se convierten a lista:
-        best_developers = df_year.sort_values("app_name", ascending=False).head(3)["developer"].to_list()
+        best_developers = df_year.sort_values("app_name", ascending=False).head(3).index.to_list()
 
-        # Se devuelven los resultados en una lista
+        # Se devuelven los resultados en un diccionario
         return {"Puesto 1" : best_developers[0], "Puesto 2" : best_developers[1], "Puesto 3" : best_developers[2]} 
 
 #---------------------------------------------------------------------------------------------------------------#
 
 @app.get('/developer_reviews/{desarrollador}')
-async def developer_reviews_analysis(desarrollador:str):
+def developer_reviews_analysis(desarrollador:str):
     '''Devuelve un diccionario con el nombre del desarrollador como llave y una lista con la cantidad total de 
     reseñas positivas y negativas de usuarios
     
@@ -253,11 +247,34 @@ async def developer_reviews_analysis(desarrollador:str):
         
         # Se juntan los valores en un f-string
         resumen_reviews = f"[Negative = {negative_reviews}, Positive = {positive_reviews}]"
-        
-        # Se almacenan los resultados en un diccionario
-        dicc = {desarrollador: resumen_reviews}
 
         # Se devuelve un diccionario con los resultados obtenidos
-        return dicc 
+        return {desarrollador: resumen_reviews} 
     
 #---------------------------------------------------------------------------------------------------------------#
+
+@app.get('/user_recommendations/{user_id}')
+def user_recommendations(user_id:str):
+    '''
+    Devuelve una lista con 5 recomendaciones de juegos para el usuario ingresado.
+  
+    Ejemplo de retorno: 
+    '''
+    user = user_id
+    # En primer lugar, sacamos los juegos que el usuario ya ha jugado:
+    games_played = df_rev_games[df_rev_games['user_id'] == user]
+
+    # Se eliminan del df de juegos los jugados por el usuario
+    df_user = df_games[["item_id", "app_name"]].drop(games_played.item_id, errors='ignore')
+
+    # Realizamos las predicciones y las agregamos en una nueva columna:
+    df_user['estimate_Score'] = df_user['item_id'].apply(lambda x: model.predict(user, x).est)
+
+    # Ordenamos el df de manera descendente en funcion al score y seleccionamos los 5 principales:
+    recommendations = df_user.sort_values('estimate_Score', ascending=False)["app_name"].head(5).to_list()
+
+    # Se crea la llave del diccionario de retorno
+    llave_dic = f'Recomendaciones para el usuario {user}'
+    
+    # Se devuelven los resultados en un diccionario
+    return {llave_dic : recommendations}
