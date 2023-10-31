@@ -11,14 +11,14 @@
 ### En este primer proyecto se hará un recorrido por el ciclo de Machine Learning Operations, partiendo de 3 datasets de la plataforma Steam, hasta llegar a un modelo de Machine Learning que nos permita realizar recomendaciones de videojuegos en funcion a los gustos del usuario.
 <br>
 <div style="text-align: center; color: blue; font-size: 1.2em; font-weight: bold;">
-  <a href="https://github.com/javierdichiachio" style="color: cadetblue; text-decoration: none;">
+  <a href="https://www.linkedin.com/in/javier-dichiachio-34104857/" style="color: cadetblue; text-decoration: none;">
     Autor: Javier Dichiachio, Cohorte 16
   </a>
 </div>
 
 # <h1 align=center> **Introducción** </h1>
 
-El desafío planteado en para este proyecto consiste en desarrollar un proceso de MLOs que incluya etapas de Ingeniería de Datos con su correspondiente Extraction, Transform and Load (ETL), hasta el entrenamiento y evaluación del modelo de Machine Learning seleccionado, con Exploratory Data Analysis (EDA) previo y optimización de hiperparámetros.
+El desafío planteado en para este proyecto consiste en desarrollar un proceso de MLOps que incluya etapas de Ingeniería de Datos con su correspondiente Extraction, Transform and Load (ETL), hasta el entrenamiento y evaluación del modelo de Machine Learning seleccionado, con Exploratory Data Analysis (EDA) previo y optimización de hiperparámetros.
 
 El **producto final** de este trabajo consiste en el **deployment** de una **API** en un **servicio web**, que permite efectuar ciertas **consultas** tanto del modelo como de los datos procesados.
 <br>
@@ -77,7 +77,7 @@ En esta etapa se realiza el proceso de **Extraction, Transform and Load (ETL)** 
 
 # EXPLORATORY DATA ANALYSIS (EDA)
 
-Una vez más, el detalle de este proceso puede seguirse paso a paso en el Jupyter Notebook [EDA_y_ModeloML.ipynb](/EDA_y_ModeloML.ipynb). Se realizan distintas visualizaciones que resaltan información relevante acerca de los datos, dentro de las cuales se destacan:
+El detalle de este proceso puede seguirse paso a paso en el Jupyter Notebook [EDA_y_ModeloML.ipynb](/EDA_y_ModeloML.ipynb). Se realizan distintas visualizaciones que resaltan información relevante acerca de los datos, dentro de las cuales se destacan:
 
 + Cantidad de juegos lanzados por año.
 + Top 10 de juegos según cantidad de usuarios.
@@ -114,17 +114,22 @@ La misma contiene 5 funciones de consulta de datos (endpoints), y una que devuel
 
 # Aplicación de FAST API - DEPLOY en Render
 
-La aplicación se encuentra disponible en [la siguiente ubicación](https://mlops-steam-deploy.onrender.com/docs). 
+La aplicación se encuentra disponible en la siguiente [ubicación](https://mlops-steam-deploy.onrender.com/docs). 
 
 ## Video explicativo
 
-Se incluye un video explicativo del funcionamiento de la API en [la siguiente ubicación](https://drive.google.com/file/d/1TlQCGLelNXJIaZx1lDiAMyjLrg-y5h_U/view?usp=sharing).
+Se incluye un video explicativo del funcionamiento de la API en la siguiente [ubicación](https://drive.google.com/file/d/1TlQCGLelNXJIaZx1lDiAMyjLrg-y5h_U/view?usp=sharing).
 
 # Índice de Archivos del Repositorio
+
+## Carpeta Jupyter Notebooks
 
 + [ETL - Jupyter Notebook](/ETL.ipynb)
 + [EDA y Modelo ML: Sistema de recomendación - Jupyter Notebook](/EDA_y_ModeloML.ipynb)
 + [Prueba de Funciones API](/Funciones_API.ipynb)
+
+## Carpeta raíz del repositorio
+
 + [Archivo Main de la app FAST API](main.py)
 + [Archivo Pickle con el Modelo SVD entrenado y optimizado](RS_model.pkl)
 + [Requerimientos de la app FAST API](requirements.txt)
