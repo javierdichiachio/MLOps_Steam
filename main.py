@@ -263,7 +263,11 @@ def user_recommendations(user_id:str):
     '''
     Devuelve una lista con 5 recomendaciones de juegos para el usuario ingresado.
   
-    Ejemplo de retorno: 
+    Ejemplo de retorno: {'Recomendaciones para el usuario 76561197970982479': ['1. RWBY: Grimm Eclipse',
+  '2. Rogue Legacy',
+  '3. Dust: An Elysian Tail',
+  "4. King Arthur's Gold",
+  '5. RIFT']} 
     '''
     # Se asigna el id ingresado a la variable user
     user = user_id
