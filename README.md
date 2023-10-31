@@ -22,7 +22,9 @@ El desafío planteado en para este proyecto consiste en desarrollar un proceso d
 
 > El **producto final** de este trabajo consiste en el **deployment** de una **API** en un **servicio web**, que permite efectuar ciertas **consultas** tanto del modelo como de los datos procesados.
 <br>
+
 # <h1 align=center> **Desarrollo del Proyecto**</h1>
+
 <br>
 
 # ETL/DATA ENGINEERING
