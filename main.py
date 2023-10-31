@@ -135,16 +135,15 @@ def userdata(user_id : str):
         return dicc_rdos
 
 #---------------------------------------------------------------------------------------------------------------#
-
+'''
 @app.get('/UserForGenre/{user_id}')
 def UserForGenre(genero : str):
-    '''
     Devuelve el usuario que acumula más horas jugadas para el género dado y una lista de acumulación de horas
     por año
     
     Ejemplo de retorno: {"Usuario con más horas jugadas para Género X" : us213ndjss09sdf,
 			     "Horas jugadas":[{Año: 2013, Horas: 203}, {Año: 2012, Horas: 100}, {Año: 2011, Horas: 23}]}
-    '''
+    
     # Si el genero no se encuentra en los juegos:
     if genero not in df_games.columns:
         
@@ -188,7 +187,7 @@ def UserForGenre(genero : str):
         # Se retornan los valores en un diccionario: 
         return {clave_dicc : user_max, "Horas jugadas": hours_dicc1}
 
-    
+    '''
 #---------------------------------------------------------------------------------------------------------------#
 @app.get('/best_developer_year/{year}')
 def best_developer_year(year : str):
