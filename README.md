@@ -110,23 +110,21 @@ En esta etapa se entrena y optimiza un modelo de Machine Learning de tipo **"Sin
 La aplicación desarrollada es de tipo **API Rest** y fue creada a través del framework **FastApi**. 
 
 La misma contiene 5 funciones de consulta de datos (endpoints), y una que devuelve recomendaciones al usuario utilizando el modelo de Machine Learning entrenado. Las mismas se pueden consultar en el archivo [main.py](/main.py).
-
 <br>
 
-# <h1 align=center> **Entregables**</h1>
-
-## Aplicación de FAST API - Deploy en Render
+# Aplicación de FAST API - DEPLOY en Render
 
 La aplicación se encuentra disponible en [la siguiente ubicación](https://mlops-steam-deploy.onrender.com/docs). 
 
-## Video
+## Video explicativo
 
-[![Mirar el Video](src/thumbnail.jpg)](https://youtu.be/NoPQ7eE4Sy4)
+Se incluye un video explicativo del funcionamiento de la API en [la siguiente ubicación](https://drive.google.com/file/d/1TlQCGLelNXJIaZx1lDiAMyjLrg-y5h_U/view?usp=sharing).
 
 # Índice de Archivos del Repositorio
 
 + [ETL - Jupyter Notebook](/ETL.ipynb)
 + [EDA y Modelo ML: Sistema de recomendación - Jupyter Notebook](/EDA_y_ModeloML.ipynb)
++ [Prueba de Funciones API](/Funciones_API.ipynb)
 + [Archivo Main de la app FAST API](main.py)
 + [Archivo Pickle con el Modelo SVD entrenado y optimizado](RS_model.pkl)
 + [Requerimientos de la app FAST API](requirements.txt)
@@ -135,7 +133,7 @@ La aplicación se encuentra disponible en [la siguiente ubicación](https://mlop
 + [Dataset - Funciones de consulta de FAST API - User Items](user_items_extended.parquet)
 
 
-## Fuentes de datos
+# Fuentes de datos
 
 ### El repositorio no contiene los datos originales provistos para el proyecto, los mismos pueden ser encontrados en las siguientes ubicaciones:
 
