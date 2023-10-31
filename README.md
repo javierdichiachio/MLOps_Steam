@@ -20,7 +20,7 @@
 
 El desafío planteado en para este proyecto consiste en desarrollar un proceso de MLOps que incluya etapas de Ingeniería de Datos con su correspondiente Extraction, Transform and Load (ETL), hasta el entrenamiento y evaluación del modelo de Machine Learning seleccionado, con Exploratory Data Analysis (EDA) previo y optimización de hiperparámetros.
 
-El **producto final** de este trabajo consiste en el **deployment** de una **API** en un **servicio web**, que permite efectuar ciertas **consultas** tanto del modelo como de los datos procesados.
+> El **producto final** de este trabajo consiste en el **deployment** de una **API** en un **servicio web**, que permite efectuar ciertas **consultas** tanto del modelo como de los datos procesados.
 <br>
 # <h1 align=center> **Desarrollo del Proyecto**</h1>
 <br>
@@ -114,11 +114,11 @@ La misma contiene 5 funciones de consulta de datos (endpoints), y una que devuel
 
 # Aplicación de FAST API - DEPLOY en Render
 
-La aplicación se encuentra disponible en la siguiente [ubicación](https://mlops-steam-deploy.onrender.com/docs). 
+> La aplicación se encuentra disponible en la siguiente [ubicación](https://mlops-steam-deploy.onrender.com/docs). 
 
 ## Video explicativo
 
-Se incluye un video explicativo del funcionamiento de la API en la siguiente [ubicación](https://drive.google.com/file/d/1TlQCGLelNXJIaZx1lDiAMyjLrg-y5h_U/view?usp=sharing).
+> Se incluye un video explicativo del funcionamiento de la API en la siguiente [ubicación](https://drive.google.com/file/d/1TlQCGLelNXJIaZx1lDiAMyjLrg-y5h_U/view?usp=sharing).
 
 # Índice de Archivos del Repositorio
 
