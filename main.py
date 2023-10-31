@@ -269,35 +269,41 @@ def user_recommendations(user_id:str):
   "4. King Arthur's Gold",
   '5. RIFT']} 
     '''
-    # Se asigna el id ingresado a la variable user
-    user = user_id
-
-    # En primer lugar, sacamos los juegos que el usuario ya ha jugado:
-    # df_items = pd.read_parquet('user_items_extended.parquet')                         # archivo no soportado por Render
-    # df_items_games = pd.merge(df_items,df_games, on = "item_id", how="inner")
-    df_rev_games = pd.merge(df_reviews,df_games, on = "item_id", how="inner")
-    games_played = df_rev_games[df_rev_games['user_id'] == user]
-
-    # Se eliminan del df de juegos los jugados por el usuario
-    df_user = df_games[["item_id", "app_name"]].drop(games_played.item_id, errors='ignore')
-
-    # Cargamos el modelo de Sistema de Recomendación entrenado:
-    with open('RS_model.pkl', 'rb') as file:
-        RS_model = pickle.load(file)
-
-    # Realizamos las predicciones y las agregamos en una nueva columna:
-    df_user['estimate_Score'] = df_user['item_id'].apply(lambda x: RS_model.predict(user, x).est)
-
-    # Ordenamos el df de manera descendente en funcion al score y seleccionamos los 5 principales:
-    recommendations = df_user.sort_values('estimate_Score', ascending=False)["app_name"].head(5).to_list()
-
-    # Se crea la llave del diccionario de retorno
-    llave_dic = f'Recomendaciones para el usuario {user}'
-
-    # Se da formato al top 5 de recomendaciones:
-    recomm_output = [f'1. {recommendations[0]}', f'2. {recommendations[1]}', f'3. {recommendations[2]}', f'4. {recommendations[3]}',f'5. {recommendations[4]}']
+    # Si el user_id no se encuentra en los dataframes:
+    if user_id not in df_reviews['user_id'].values:
+        
+        return f"ERROR: El user_id {user_id} no existe en la base de datos."   # se imprime mensaje de error
     
-    # Se devuelven los resultados en un diccionario
-    return {llave_dic : recomm_output}
+    else:
+        # Se asigna el id ingresado a la variable user
+        user = user_id
+
+        # En primer lugar, sacamos los juegos que el usuario ya ha jugado:
+        # df_items = pd.read_parquet('user_items_extended.parquet')                         # archivo no soportado por Render
+        # df_items_games = pd.merge(df_items,df_games, on = "item_id", how="inner")
+        df_rev_games = pd.merge(df_reviews,df_games, on = "item_id", how="inner")
+        games_played = df_rev_games[df_rev_games['user_id'] == user]
+
+        # Se eliminan del df de juegos los jugados por el usuario
+        df_user = df_games[["item_id", "app_name"]].drop(games_played.item_id, errors='ignore')
+
+        # Cargamos el modelo de Sistema de Recomendación entrenado:
+        with open('RS_model.pkl', 'rb') as file:
+            RS_model = pickle.load(file)
+
+        # Realizamos las predicciones y las agregamos en una nueva columna:
+        df_user['estimate_Score'] = df_user['item_id'].apply(lambda x: RS_model.predict(user, x).est)
+
+        # Ordenamos el df de manera descendente en funcion al score y seleccionamos los 5 principales:
+        recommendations = df_user.sort_values('estimate_Score', ascending=False)["app_name"].head(5).to_list()
+
+        # Se crea la llave del diccionario de retorno
+        llave_dic = f'Recomendaciones para el usuario {user}'
+
+        # Se da formato al top 5 de recomendaciones:
+        recomm_output = [f'1. {recommendations[0]}', f'2. {recommendations[1]}', f'3. {recommendations[2]}', f'4. {recommendations[3]}',f'5. {recommendations[4]}']
+        
+        # Se devuelven los resultados en un diccionario
+        return {llave_dic : recomm_output}
 
 #---------------------------------------------------------------------------------------------------------------#
