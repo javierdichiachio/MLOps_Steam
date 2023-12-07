@@ -126,9 +126,9 @@ La misma contiene 5 funciones de consulta de datos (endpoints), y una que devuel
 
 ## Carpeta Jupyter_Notebooks
 
-+ [ETL - Jupyter Notebook](/PI_01/Jupyter_Notebooks/ETL.ipynb)
-+ [EDA y Modelo ML: Sistema de recomendación - Jupyter Notebook](/PI_01/Jupyter_Notebooks/EDA_y_ModeloML.ipynb)
-+ [Prueba de Funciones API](/PI_01/Jupyter_Notebooks/Funciones_API.ipynb)
++ [ETL - Jupyter Notebook](/Jupyter_Notebooks/ETL.ipynb)
++ [EDA y Modelo ML: Sistema de recomendación - Jupyter Notebook](/Jupyter_Notebooks/EDA_y_ModeloML.ipynb)
++ [Prueba de Funciones API](/Jupyter_Notebooks/Funciones_API.ipynb)
 
 ## Carpeta raíz del repositorio
 
